@@ -41,10 +41,11 @@ function step!(model, trajectory, (when, s_event_id))
     q_dest_sym = destination!(s_event, q_receive_dict, event_token)
     q_dest_id = role_to_id[q_dest_sym]
     q_dest = model.queue[q_dest_id]
-    push!(q_dest, event_token)
+    push!(q_dest, event_token, when)
+    modify_server_and_queue!(trajectory, s_event_id, q_dest_id)
 
     # Changing the receiving queue could start waiting servers.
-    server_ids = outservers(model.network, q_dest_id)
+    server_ids = Set(outservers(model.network, q_dest_id))
     push!(server_ids, s_event_id)  # The original server could start again.
 
     for s_ready_id in server_ids
@@ -53,12 +54,15 @@ function step!(model, trajectory, (when, s_event_id))
             q_only_id = inqueues(model.network, s_ready_id)[1]
             s_ready_role = model.server_role[(q_only_id, s_ready_id)]
             s_ready = model.server[s_ready_id]
-            take_token = get_token!(model.queue[q_only_id], s_ready, s_ready_role)
+            take_token = get_token!(
+                model.queue[q_only_id], s_ready, s_ready_role, when
+                )
             if take_token !== nothing
                 fire_rate = rate(model.server[s_ready_id], take_token)
                 start!(trajectory, s_ready_id, fire_rate)
                 model.server_tokens[s_ready_id] = take_token
                 model.server_available[s_ready_id] = false
+                modify_server_and_queue!(trajectory, s_ready_id, q_only_id)
             end
         end
     end

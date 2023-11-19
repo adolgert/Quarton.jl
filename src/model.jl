@@ -1,12 +1,17 @@
 using Graphs
 
 export QueueModel
-export add_queue!, add_server!, connect!, step!
+export add_queue!, add_server!, connect!, step!, check_model
 
 struct BiGraph
     server::SimpleDiGraph{Int}
     queue::SimpleDiGraph{Int}
-    BiGraph(n::Int) = new(SimpleDiGraph{Int}(n), SimpleDiGraph{Int}(n))
+    server_cnt::Int
+    queue_cnt::Int
+    function BiGraph(scnt, qcnt)
+        n = max(scnt, qcnt)
+        new(SimpleDiGraph{Int}(n), SimpleDiGraph{Int}(n), scnt, qcnt)
+    end
 end
 
 add_server_edge!(g::BiGraph, s, q) = add_edge!(g.server, s, q)
@@ -15,6 +20,22 @@ inqueues(g::BiGraph, s) = inneighbors(g.queue, s)
 outqueues(g::BiGraph, s) = outneighbors(g.server, s)
 inservers(g::BiGraph, q) = inneighbors(g.server, q)
 outservers(g::BiGraph, q) = outneighbors(g.queue, q)
+
+"""
+In order to check graph properties, convert the bigraph into a single
+directed graph where the first N nodes are servers and the next N
+nodes are queues.
+"""
+function single_graph(bigraph::BiGraph)
+    s = SimpleDiGraph{Int}(bigraph.server_cnt + bigraph.queue_cnt)
+    for edge in edges(bigraph.server)
+        add_edge!(s, src(edge), bigraph.server_cnt + dst(edge))
+    end
+    for edge in edges(bigraph.queue)
+        add_edge!(s, bigraph.server_cnt + src(edge), dst(edge))
+    end
+    return s
+end
 
 
 mutable struct QueueModel
@@ -28,9 +49,10 @@ mutable struct QueueModel
     built::Bool
 end
 
+
 function QueueModel()
     QueueModel(
-        BiGraph(0),
+        BiGraph(0, 0),
         Dict{Tuple{Int,Int},Symbol}(),
         Dict{Tuple{Int,Int},Symbol}(),
         Vector{Server}(),
@@ -48,8 +70,8 @@ function ensure_built!(m::QueueModel)
     if !m.built
         resize!(m.server_tokens, length(m.server))
         resize!(m.server_available, length(m.server))
-        node_cnt = max(length(m.server), length(m.queue))
-        m.network = BiGraph(node_cnt)
+        m.server_available .= true
+        m.network = BiGraph(length(m.server), length(m.queue))
         m.built = true
     end
 end
@@ -70,3 +92,11 @@ function connect!(m::QueueModel, s::Server, q::Queue, role::Symbol)
     m.queue_role[(sid, qid)] = role
 end
 
+
+function check_model(m::QueueModel)
+    equivalent_graph = single_graph(m.network)
+    @assert is_weakly_connected(equivalent_graph)
+    for server_id in eachindex(m.server)
+        @assert length(inqueues(m.network, server_id)) == 1
+    end
+end
