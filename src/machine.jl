@@ -45,7 +45,7 @@ function step!(model, trajectory, (when, s_event_id))
     modify_server_and_queue!(trajectory, s_event_id, q_dest_id)
 
     # Changing the receiving queue could start waiting servers.
-    server_ids = outservers(model.network, q_dest_id)
+    server_ids = Set(outservers(model.network, q_dest_id))
     push!(server_ids, s_event_id)  # The original server could start again.
 
     for s_ready_id in server_ids

@@ -70,6 +70,7 @@ function ensure_built!(m::QueueModel)
     if !m.built
         resize!(m.server_tokens, length(m.server))
         resize!(m.server_available, length(m.server))
+        m.server_available .= true
         m.network = BiGraph(length(m.server), length(m.queue))
         m.built = true
     end

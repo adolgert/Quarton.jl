@@ -21,7 +21,7 @@ using Test
     end
     println("created $(source.create_cnt)")
     println("retired $(sink.retire_cnt)")
-    throughput = sink.retire_total_duration / sink.retire_cnt
+    throughput = sink.retire_cnt / sink.retire_total_duration
     println("throughput $throughput")
 end
 
@@ -47,9 +47,13 @@ end
         @test isfinite(when)
         step!(model, trajectory, (when, which))
     end
+    @test source.create_cnt > 0
+    println("fifo size $(length(fifo.deque))")
+    @test fifo.retire_cnt > 0
+    @test sink.retire_cnt > 0
     println("created $(source.create_cnt)")
     println("fifo retired $(fifo.retire_cnt)")
     println("retired $(sink.retire_cnt)")
-    throughput = sink.retire_total_duration / sink.retire_cnt
+    throughput = sink.retire_cnt / sink.retire_total_duration
     println("throughput $throughput")
 end
