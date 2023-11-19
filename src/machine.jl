@@ -27,43 +27,18 @@ function step!(model, trajectory, (when, s_event_id))
     modify!(s_event, event_token)
     model.server_available[s_event_id] = true
 
-    # That event_token will go to one of the queues waiting for it.
-    q_receive_ids = outqueues(model.network, s_event_id)
-    # All this setup making temporary dictionaries is meant to allow users'
-    # code to focus on outgoing queues and their roles.
-    q_receive_dict = Dict{Symbol,Queue}()
-    role_to_id = Dict{Symbol,Int}()
-    for q_id in q_receive_ids
-        role = model.queue_role[(s_event_id, q_id)]
-        q_receive_dict[role] = model.queue[q_id]
-        role_to_id[role] = q_id
-    end
-    q_dest_sym = destination!(s_event, q_receive_dict, event_token)
-    q_dest_id = role_to_id[q_dest_sym]
-    q_dest = model.queue[q_dest_id]
-    push!(q_dest, event_token, when)
-    modify_server_and_queue!(trajectory, s_event_id, q_dest_id)
+    s_downstream = ServerDownstream(model, trajectory, s_event_id)
+    q_dest = update_downstream!(s_event, s_downstream, when, trajectory.rng)
 
-    # Changing the receiving queue could start waiting servers.
-    server_ids = Set(outservers(model.network, q_dest_id))
-    push!(server_ids, s_event_id)  # The original server could start again.
-
-    for s_ready_id in server_ids
-        if model.server_available[s_ready_id]
-            # There is exactly one input queue for each server.
-            q_only_id = inqueues(model.network, s_ready_id)[1]
-            s_ready_role = model.server_role[(q_only_id, s_ready_id)]
-            s_ready = model.server[s_ready_id]
-            take_token = get_token!(
-                model.queue[q_only_id], s_ready, s_ready_role, when
-                )
-            if take_token !== nothing
-                fire_rate = rate(model.server[s_ready_id], take_token)
-                start!(trajectory, s_ready_id, fire_rate)
-                model.server_tokens[s_ready_id] = take_token
-                model.server_available[s_ready_id] = false
-                modify_server_and_queue!(trajectory, s_ready_id, q_only_id)
-            end
-        end
+    # We care about two queues, the one that feeds the server that fired
+    # and the one that just received a token. No others. Each of those
+    # two gets to decide which available server can get a token.
+    queue_ids = Set(inqueues(model.network, s_event_id))
+    push!(queue_ids, id(q_dest))
+    for q_update_id in queue_ids
+        downstream = QueueDownstream(model, trajectory, q_update_id)
+        update_downstream!(
+            model.queue[q_update_id], downstream, when, trajectory.rng
+            )
     end
 end

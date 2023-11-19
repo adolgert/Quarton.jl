@@ -63,8 +63,17 @@ function QueueModel()
         )
 end
 
-add_server!(m::QueueModel, server) = (push!(m.server, server); server)
-add_queue!(m::QueueModel, queue) = (push!(m.queue, queue); queue)
+function add_server!(m::QueueModel, server)
+    push!(m.server, server)
+    id!(server, length(m.server))
+    return server
+end
+
+function add_queue!(m::QueueModel, queue)
+    push!(m.queue, queue)
+    id!(queue, length(m.queue))
+    queue
+end
 
 function ensure_built!(m::QueueModel)
     if !m.built

@@ -8,6 +8,7 @@ include("queue.jl")
 include("server.jl")
 include("model.jl")
 include("trajectory.jl")
+include("downstream.jl")
 include("machine.jl")
 
 end # module quarton
