@@ -35,3 +35,8 @@ modify!(s::Server, token) = (s.modify_token(token); nothing)
 function destination!(s::Server, queue_dict, token)
     return destination!(s.disbursement, queue_dict, token)
 end
+
+
+function update_downstream!(s::Server, downstream, when, rng)
+    update_downstream!(s.disbursement, downstream, when, rng)
+end
