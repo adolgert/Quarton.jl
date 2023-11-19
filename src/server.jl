@@ -103,13 +103,6 @@ inservers(g::BiGraph, q) = inneighbors(g.server, q)
 outservers(g::BiGraph, q) = outneighbors(g.queue, q)
 
 
-struct ServerId
-    id::Int
-end
-struct QueueId
-    id::Int
-end
-
 mutable struct QueueModel
     network::BiGraph
     server_role::Dict{Tuple{Int,Int},Symbol} # what a server means to a queue
@@ -134,8 +127,8 @@ function QueueModel()
         )
 end
 
-add_server!(m::QueueModel, server) = (push!(m.server, server); ServerId(length(m.server)))
-add_queue!(m::QueueModel, queue) = (push!(m.queue, queue); QueueId(length(m.queue)))
+add_server!(m::QueueModel, server) = (push!(m.server, server); server)
+add_queue!(m::QueueModel, queue) = (push!(m.queue, queue); queue)
 
 function ensure_built!(m::QueueModel)
     if !m.built
@@ -148,27 +141,19 @@ function ensure_built!(m::QueueModel)
 end
 
 function connect!(m::QueueModel, q::Queue, s::Server, role::Symbol)
+    ensure_built!(m)
     qid = findfirst(isequal(q), m.queue)
     sid = findfirst(isequal(s), m.server)
-    connect!(m, QueueId(qid), ServerId(sid), role)
+    add_queue_edge!(m.network, qid, sid)
+    m.server_role[(qid, sid)] = role
 end
 
 function connect!(m::QueueModel, s::Server, q::Queue, role::Symbol)
+    ensure_built!(m)
     sid = findfirst(isequal(s), m.server)
     qid = findfirst(isequal(q), m.queue)
-    connect!(m, ServerId(sid), QueueId(qid), role)
-end
-
-function connect!(m::QueueModel, q::QueueId, s::ServerId, role::Symbol)
-    ensure_built!(m)
-    add_queue_edge!(m.network, q.id, s.id)
-    m.server_role[(q.id, s.id)] = role
-end
-
-function connect!(m::QueueModel, s::ServerId, q::QueueId, role::Symbol)
-    ensure_built!(m)
-    add_server_edge!(m.network, s.id, q.id)
-    m.queue_role[(s.id, q.id)] = role
+    add_server_edge!(m.network, sid, qid)
+    m.queue_role[(sid, qid)] = role
 end
 
 
