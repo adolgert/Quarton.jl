@@ -34,16 +34,6 @@ function update_downstream!(q::FIFOQueue, downstream, when, rng)
 end
 
 
-function get_token!(q::FIFOQueue, server, server_role, when)
-    if !isempty(q.deque)
-        token, emplace_time = popfirst!(q.deque)
-        q.retire_cnt += 1
-        q.retire_total_duration += when - emplace_time
-        return token
-    end
-    return nothing
-end
-
 throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
 mutable struct InfiniteQueue <: Queue
@@ -58,11 +48,6 @@ function update_downstream!(q::InfiniteQueue, downstream, when, rng)
         push!(downstream, s, Work(when))
     end
     nothing
-end
-
-function get_token!(q::InfiniteQueue, server, server_role, when)
-    q.create_cnt += 1
-    Work(when)
 end
 
 
