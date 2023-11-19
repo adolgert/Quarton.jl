@@ -13,15 +13,19 @@ using Random
 export Server
 
 
-struct Server
+mutable struct Server
     rate::UnivariateDistribution
     modify_token::Function
     disbursement::Disbursement
+    id::Int
 end
 
 function Server(rate::Float64)
-    Server(Exponential(rate), identity, RoundRobin())
+    Server(Exponential(rate), identity, RoundRobin(), zero(Int))
 end
+
+id!(s::Server, id::Int) = (s.id = id; s)
+id(s::Server) = s.id
 
 set_rate!(s::Server, rate::Float64) = (s.rate = Exponential(rate); nothing)
 set_rate!(s::Server, rate::UnivariateDistribution) = (s.rate = rate; nothing)

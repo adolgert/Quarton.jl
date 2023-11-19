@@ -5,11 +5,16 @@ export Queue, InfiniteQueue, FIFOQueue, SinkQueue
 
 abstract type Queue end
 
+id!(q::Queue, id::Int) = (q.id = id; q)
+id(q::Queue) = q.id
+
+
 mutable struct FIFOQueue <: Queue
     deque::Deque{Tuple{Token,Time}}
     retire_cnt::Int
     retire_total_duration::Time
-    FIFOQueue() = new(Deque{Tuple{Token,Time}}(), zero(Int), zero(Time))
+    id::Int
+    FIFOQueue() = new(Deque{Tuple{Token,Time}}(), zero(Int), zero(Time), zero(Int))
 end
 
 Base.push!(q::FIFOQueue, token, when) = push!(q.deque, (token, when))
@@ -28,7 +33,8 @@ throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
 mutable struct InfiniteQueue <: Queue
     create_cnt::Int
-    InfiniteQueue() = new(zero(Int))
+    id::Int
+    InfiniteQueue() = new(zero(Int), zero(Int))
 end
 
 function get_token!(q::InfiniteQueue, server, server_role, when)
@@ -40,7 +46,8 @@ end
 mutable struct SinkQueue <: Queue
     retire_cnt::Int
     retire_total_duration::Time
-    SinkQueue() = new(zero(Int), zero(Time))
+    id::Int
+    SinkQueue() = new(zero(Int), zero(Time), zero(Int))
 end
 
 

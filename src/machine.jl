@@ -44,10 +44,21 @@ function step!(model, trajectory, (when, s_event_id))
     push!(q_dest, event_token, when)
     modify_server_and_queue!(trajectory, s_event_id, q_dest_id)
 
+    # We care about two queues, the one that feeds the server that fired
+    # and the one that just received a token. No others. Each of those
+    # two gets to decide which available server can get a token.
+    queue_ids = Set(inqueues(model.network, s_event_id))
+    push!(queue_ids, q_dest_id)
+    
+
     # Changing the receiving queue could start waiting servers.
     server_ids = Set(outservers(model.network, q_dest_id))
     push!(server_ids, s_event_id)  # The original server could start again.
 
+    # Which of the ready servers get which tokens?
+    # That logic sits in the queues that distribute tokens to servers.
+    # If more than one server is available at the same time, the server
+    # decides.
     for s_ready_id in server_ids
         if model.server_available[s_ready_id]
             # There is exactly one input queue for each server.
