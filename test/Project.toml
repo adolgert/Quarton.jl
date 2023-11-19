@@ -1,0 +1,8 @@
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+Fleck = "5bb9b785-358c-4fee-af0f-b94a146244a8"
+Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
+SafeTestsets = "1bc83da4-3b8d-516f-aca4-4fe02f6d838f"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+quarton = "e0d6bf9a-d53e-4519-906a-0943e0b4313c"
