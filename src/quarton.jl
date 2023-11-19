@@ -1,5 +1,7 @@
 module quarton
 
+Time = Float64
+
 include("token.jl")
 include("disbursement.jl")
 include("queue.jl")
