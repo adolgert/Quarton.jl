@@ -1,7 +1,7 @@
 
 using DataStructures
 
-export Queue, InfiniteQueue, FIFOQueue, SinkQueue
+export Queue, InfiniteSourceQueue, FIFOQueue, SinkQueue
 
 abstract type Queue end
 
@@ -36,13 +36,13 @@ end
 
 throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
-mutable struct InfiniteQueue <: Queue
+mutable struct InfiniteSourceQueue <: Queue
     create_cnt::Int
     id::Int
-    InfiniteQueue() = new(zero(Int), zero(Int))
+    InfiniteSourceQueue() = new(zero(Int), zero(Int))
 end
 
-function update_downstream!(q::InfiniteQueue, downstream, when, rng)
+function update_downstream!(q::InfiniteSourceQueue, downstream, when, rng)
     for s in available_servers(downstream)
         q.create_cnt += 1
         push!(downstream, s, Work(when))
@@ -61,7 +61,7 @@ end
 
 function Base.push!(q::SinkQueue, token, when)
     q.retire_cnt += 1
-    q.retire_total_duration += when - token.created
+    q.retire_total_duration += when - created(token)
 end
 
 

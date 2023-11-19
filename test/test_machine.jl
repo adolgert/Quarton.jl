@@ -2,7 +2,7 @@ using Test
 
 @testset "Run simple machine" begin
     model = QueueModel()
-    source = InfiniteQueue()
+    source = InfiniteSourceQueue()
     sink = SinkQueue()
     s1 = Server(1.0)
     add_queue!(model, source)
@@ -29,7 +29,7 @@ end
 
 @testset "Machine with FIFO" begin
     model = QueueModel()
-    source = add_queue!(model, InfiniteQueue())
+    source = add_queue!(model, InfiniteSourceQueue())
     fifo = add_queue!(model, FIFOQueue())
     sink = add_queue!(model, SinkQueue())
     s1 = add_server!(model, Server(1.0))
