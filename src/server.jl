@@ -21,8 +21,12 @@ mutable struct ModifyServer <: Server
     id::Int
 end
 
-function ModifyServer(rate::Float64)
-    ModifyServer(Exponential(1.0 / rate), identity, RoundRobin(), zero(Int))
+
+function ModifyServer(rate::Float64; disbursement=nothing)
+    if disbursement === nothing
+        disbursement = RoundRobin()
+    end
+    ModifyServer(Exponential(1.0 / rate), identity, disbursement, zero(Int))
 end
 
 id!(s::ModifyServer, id::Int) = (s.id = id; s)
