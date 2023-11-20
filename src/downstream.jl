@@ -56,6 +56,8 @@ end
 
 # There is no token argument because it's always the one token.
 function Base.push!(d::ServerDownstream, queue, when)
-    push!(queue, d.model.server_tokens[d.s_id], when)
+    event_token = d.model.server_tokens[d.s_id]
+    modify!(d.model.server[d.s_id], event_token, when)
+    push!(queue, event_token, when)
     modify_server_and_queue!(d.trajectory, d.s_id, id(queue))
 end

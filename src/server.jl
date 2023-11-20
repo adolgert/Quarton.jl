@@ -22,11 +22,14 @@ mutable struct ModifyServer <: Server
 end
 
 
-function ModifyServer(rate::Float64; disbursement=nothing)
+function ModifyServer(rate::Float64; disbursement=nothing, modify=nothing)
     if disbursement === nothing
         disbursement = RoundRobin()
     end
-    ModifyServer(rate, identity, disbursement, zero(Int))
+    if modify === nothing
+        modify = identity
+    end
+    ModifyServer(rate, modify, disbursement, zero(Int))
 end
 
 id!(s::ModifyServer, id::Int) = (s.id = id; s)

@@ -2,6 +2,7 @@
 using DataStructures
 
 export Queue, InfiniteSourceQueue, FIFOQueue, SinkQueue, RandomQueue, total_work
+export FiniteFIFOQueue
 
 abstract type Queue end
 
@@ -105,3 +106,42 @@ end
 total_work(q::RandomQueue) = sum(workload(w) for w in q.queue)
 
 throughput(q::RandomQueue) = q.retire_cnt / q.retire_total_duration
+
+
+mutable struct FiniteFIFOQueue <: Queue
+    deque::Deque{Tuple{Token,Time}}
+    limit::Int
+    retire_cnt::Int
+    retire_total_duration::Time
+    drop_cnt::Int
+    id::Int
+    FiniteFIFOQueue(limit::Int) = new(
+        Deque{Tuple{Token,Time}}(), limit, zero(Int), zero(Time), zero(Int), zero(Int)
+        )
+end
+
+function Base.push!(q::FiniteFIFOQueue, token, when)
+    if length(q.deque) <= q.limit
+        push!(q.deque, (token, when))
+    else
+        q.drop_cnt += 1
+    end
+end
+
+function update_downstream!(q::FiniteFIFOQueue, downstream, when, rng)
+    s_available = available_servers(downstream)
+    shuffle!(rng, s_available)
+    for s in s_available
+        if !isempty(q.deque)
+            token, emplace_time = popfirst!(q.deque)
+            q.retire_cnt += 1
+            q.retire_total_duration += when - emplace_time
+            push!(downstream, s, token)
+        end
+    end
+    nothing
+end
+
+total_work(q::FiniteFIFOQueue) = sum(workload(w) for w in q.deque)
+
+throughput(q::FiniteFIFOQueue) = q.retire_cnt / q.retire_total_duration
