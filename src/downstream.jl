@@ -39,8 +39,18 @@ struct ServerDownstream
 end
 
 
+finished_job(d::ServerDownstream) = d.model.server_tokens[d.s_id]
+
+
 function queues(d::ServerDownstream)
     [d.model.queue[idx] for idx in outqueues(d.model.network, d.s_id)]
+end
+
+
+function queues_with_role(d::ServerDownstream, role::Symbol)
+    [d.model.queue[q_idx] for q_idx in outqueues(d.model.network, d.s_id)
+        if d.model.queue_role[(d.s_id, q_idx)] == role
+    ]
 end
 
 

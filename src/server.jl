@@ -17,7 +17,7 @@ export Server, ArrivalServer, ModifyServer
 mutable struct ModifyServer <: Server
     rate::Float64
     modify_token::Function
-    disbursement::Disbursement
+    disbursement::Assignment
     id::Int
 end
 
@@ -48,12 +48,15 @@ rate.
 """
 mutable struct ArrivalServer <: Server
     rate::Float64
-    disbursement::Disbursement
+    disbursement::Assignment
     id::Int
 end
 
-function ArrivalServer(rate::Float64)
-    ArrivalServer(rate, RoundRobin(), zero(Int))
+function ArrivalServer(rate::Float64; disbursement=nothing)
+    if disbursement === nothing
+        disbursement = RoundRobin()
+    end
+    ArrivalServer(rate, disbursement, zero(Int))
 end
 
 id!(s::ArrivalServer, id::Int) = (s.id = id; s)
