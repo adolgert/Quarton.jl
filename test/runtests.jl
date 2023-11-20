@@ -1,5 +1,5 @@
 using Test
-using quarton
+using Quarton
 
 @testset "server" begin
     include("test_server.jl")

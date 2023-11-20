@@ -24,7 +24,7 @@ function step!(model, trajectory, (when, s_event_id))
     stop!(trajectory, s_event_id, when)
     s_event = model.server[s_event_id]
     event_token = model.server_tokens[s_event_id]
-    modify!(s_event, event_token)
+    modify!(s_event, event_token, when)
     model.server_available[s_event_id] = true
 
     s_downstream = ServerDownstream(model, trajectory, s_event_id)

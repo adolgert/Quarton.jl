@@ -1,6 +1,6 @@
-name = "quarton"
+name = "Quarton"
 uuid = "e0d6bf9a-d53e-4519-906a-0943e0b4313c"
-authors = ["Drew Dolgert <adolgert@uw.edu>"]
+authors = ["Drew Dolgert <github@dolgert.com>"]
 version = "0.1.0"
 
 [deps]
