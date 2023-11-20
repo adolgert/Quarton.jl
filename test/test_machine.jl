@@ -13,7 +13,7 @@ using Test
     check_model(model)
     trajectory = Trajectory(2342334)
     start_time = zero(Float64)
-    activate!(model, trajectory, s1, Work(start_time))
+    activate!(model, trajectory, s1, Work())
     for i in 1:100
         when, which = next(trajectory)
         @test isfinite(when)
@@ -41,7 +41,7 @@ end
     check_model(model)
     trajectory = Trajectory(2342334)
     start_time = zero(Float64)
-    activate!(model, trajectory, s1, Work(start_time))
+    activate!(model, trajectory, s1, Work())
     for i in 1:100
         when, which = next(trajectory)
         @test isfinite(when)

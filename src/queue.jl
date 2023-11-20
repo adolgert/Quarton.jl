@@ -39,13 +39,17 @@ throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 mutable struct InfiniteSourceQueue <: Queue
     create_cnt::Int
     id::Int
-    InfiniteSourceQueue() = new(zero(Int), zero(Int))
+    builder::Function
+    InfiniteSourceQueue(builder=(when, rng)->Work(1.0, when)) =
+            new(zero(Int), zero(Int), builder)
 end
 
 function update_downstream!(q::InfiniteSourceQueue, downstream, when, rng)
     for s in available_servers(downstream)
         q.create_cnt += 1
-        push!(downstream, s, Work(when))
+        token = q.builder(when, rng)
+        @assert workload(token) > 0.0
+        push!(downstream, s, token)
     end
     nothing
 end

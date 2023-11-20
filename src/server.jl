@@ -15,7 +15,7 @@ abstract type Server end
 export Server, ArrivalServer, ModifyServer
 
 mutable struct ModifyServer <: Server
-    rate::UnivariateDistribution
+    rate::Float64
     modify_token::Function
     disbursement::Disbursement
     id::Int
@@ -26,13 +26,13 @@ function ModifyServer(rate::Float64; disbursement=nothing)
     if disbursement === nothing
         disbursement = RoundRobin()
     end
-    ModifyServer(Exponential(1.0 / rate), identity, disbursement, zero(Int))
+    ModifyServer(rate, identity, disbursement, zero(Int))
 end
 
 id!(s::ModifyServer, id::Int) = (s.id = id; s)
 id(s::ModifyServer) = s.id
 
-rate(s::ModifyServer, token) = s.rate
+rate(s::ModifyServer, token) = Exponential(workload(token) / s.rate)
 modify!(s::ModifyServer, token, when) = (s.modify_token(token); nothing)
 
 
@@ -47,19 +47,19 @@ and feed it to this ArrivalServer. This will create tokens at the needed
 rate.
 """
 mutable struct ArrivalServer <: Server
-    rate::UnivariateDistribution
+    rate::Float64
     disbursement::Disbursement
     id::Int
 end
 
 function ArrivalServer(rate::Float64)
-    ArrivalServer(Exponential(1.0 / rate), RoundRobin(), zero(Int))
+    ArrivalServer(rate, RoundRobin(), zero(Int))
 end
 
 id!(s::ArrivalServer, id::Int) = (s.id = id; s)
 id(s::ArrivalServer) = s.id
 
-rate(s::ArrivalServer, token) = s.rate
+rate(s::ArrivalServer, token) = Exponential(workload(token) / s.rate)
 modify!(s::ArrivalServer, token, when) = create!(token, when)
 
 
