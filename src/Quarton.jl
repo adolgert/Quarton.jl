@@ -1,4 +1,4 @@
-module quarton
+module Quarton
 
 Time = Float64
 
@@ -11,4 +11,4 @@ include("trajectory.jl")
 include("downstream.jl")
 include("machine.jl")
 
-end # module quarton
+end # module Quarton

@@ -23,12 +23,10 @@ function step!(model, trajectory, (when, s_event_id))
     # First take the token from the server that just completed work.
     stop!(trajectory, s_event_id, when)
     s_event = model.server[s_event_id]
-    event_token = model.server_tokens[s_event_id]
-    modify!(s_event, event_token)
-    model.server_available[s_event_id] = true
 
     s_downstream = ServerDownstream(model, trajectory, s_event_id)
     q_dest = update_downstream!(s_event, s_downstream, when, trajectory.rng)
+    model.server_available[s_event_id] = true
 
     # We care about two queues, the one that feeds the server that fired
     # and the one that just received a token. No others. Each of those

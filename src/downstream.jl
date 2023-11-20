@@ -39,13 +39,25 @@ struct ServerDownstream
 end
 
 
+finished_job(d::ServerDownstream) = d.model.server_tokens[d.s_id]
+
+
 function queues(d::ServerDownstream)
     [d.model.queue[idx] for idx in outqueues(d.model.network, d.s_id)]
 end
 
 
+function queues_with_role(d::ServerDownstream, role::Symbol)
+    [d.model.queue[q_idx] for q_idx in outqueues(d.model.network, d.s_id)
+        if d.model.queue_role[(d.s_id, q_idx)] == role
+    ]
+end
+
+
 # There is no token argument because it's always the one token.
 function Base.push!(d::ServerDownstream, queue, when)
-    push!(queue, d.model.server_tokens[d.s_id], when)
+    event_token = d.model.server_tokens[d.s_id]
+    modify!(d.model.server[d.s_id], event_token, when)
+    push!(queue, event_token, when)
     modify_server_and_queue!(d.trajectory, d.s_id, id(queue))
 end
