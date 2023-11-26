@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg1"
+   inkscape:version="1.3.1 (91b66b0783, 2023-11-16)"
+   sodipodi:docname="queue2.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="1.6076602"
+     inkscape:cx="396.53902"
+     inkscape:cy="480.51199"
+     inkscape:window-width="3824"
+     inkscape:window-height="2107"
+     inkscape:window-x="2568"
+     inkscape:window-y="8"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:#f56a6a;fill-opacity:1;stroke-width:0.264583"
+       id="rect1"
+       width="23.263447"
+       height="16.502968"
+       x="37.252827"
+       y="46.237461"
+       inkscape:label="queue" />
+    <rect
+       style="fill:#f56a6a;fill-opacity:1;stroke-width:0.264583"
+       id="rect1-5"
+       width="23.263447"
+       height="16.502968"
+       x="121.13654"
+       y="45.019329"
+       inkscape:label="queue" />
+    <rect
+       style="fill:#f56a6a;fill-opacity:1;stroke-width:0.264583"
+       id="rect1-5-7"
+       width="23.263447"
+       height="16.502968"
+       x="115.43117"
+       y="101.84364"
+       inkscape:label="queue" />
+    <ellipse
+       style="fill:#6af56e;fill-opacity:1;stroke-width:0.264583"
+       id="path1"
+       cx="89.472122"
+       cy="52.47562"
+       rx="16.194529"
+       ry="9.2723179"
+       inkscape:label="server" />
+    <ellipse
+       style="fill:#6af56e;fill-opacity:1;stroke-width:0.264583"
+       id="path1-2"
+       cx="129.75838"
+       cy="85.838509"
+       rx="16.194529"
+       ry="9.2723179"
+       inkscape:label="server" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 60.516273,53.91196 73.33808,53.275941"
+       id="path3"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect1"
+       inkscape:connection-end="#path1" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 105.65804,52.772897 15.4785,0.284284"
+       id="path4"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#path1"
+       inkscape:connection-end="#rect1-5" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 132.00567,61.522297 -1.39156,15.056997"
+       id="path5"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#rect1-5"
+       inkscape:connection-end="#path1-2" />
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 128.73009,95.092014 -0.75026,6.751626"
+       id="path6"
+       inkscape:connector-type="polyline"
+       inkscape:connector-curvature="0"
+       inkscape:connection-start="#path1-2"
+       inkscape:connection-end="#rect1-5-7" />
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;white-space:pre;shape-inside:url(#rect1);display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"
+       x="36.295296"
+       y="91.246277"
+       id="text6"><tspan
+         x="37.251953"
+         y="49.047412"
+         id="tspan1">Infinite Source</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;white-space:pre;shape-inside:url(#path1);display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"
+       x="62.180401"
+       y="76.651672"
+       id="text7"><tspan
+         x="75.920662"
+         y="49.981006"
+         id="tspan2">Arrival</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;white-space:pre;shape-inside:url(#path1-2);display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"
+       x="70.820396"
+       y="85.221832"
+       id="text8"><tspan
+         x="116.20777"
+         y="83.344287"
+         id="tspan3">FIFO</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;white-space:pre;shape-inside:url(#rect1-5-7);display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"
+       x="70.016319"
+       y="94.950241"
+       id="text9"><tspan
+         x="115.43164"
+         y="104.65288"
+         id="tspan4">Sink</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-size:3.175px;white-space:pre;shape-inside:url(#rect1-5);display:inline;fill:#000000;fill-opacity:1;stroke-width:0.264583"
+       x="87.000381"
+       y="84.906624"
+       id="text10"><tspan
+         x="121.13672"
+         y="47.828662"
+         id="tspan5">FIFOQueue</tspan></text>
+  </g>
+</svg>
