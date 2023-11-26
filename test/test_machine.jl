@@ -2,13 +2,10 @@ using Test
 
 @testset "Run simple machine" begin
     model = QueueModel()
-    source = InfiniteSourceQueue()
-    sink = SinkQueue()
     s1 = ModifyServer(1.0)
-    add_queue!(model, source)
-    add_queue!(model, sink)
-    add_server!(model, s1)
+    source = InfiniteSourceQueue()
     connect!(model, source, s1, :only)
+    sink = SinkQueue()
     connect!(model, s1, sink, :only)
     check_model(model)
     trajectory = Trajectory(2342334)
@@ -29,11 +26,11 @@ end
 
 @testset "Machine with FIFO" begin
     model = QueueModel()
-    source = add_queue!(model, InfiniteSourceQueue())
-    fifo = add_queue!(model, FIFOQueue())
-    sink = add_queue!(model, SinkQueue())
-    s1 = add_server!(model, ModifyServer(1.0))
-    s2 = add_server!(model, ModifyServer(1.0))
+    source = InfiniteSourceQueue()
+    fifo = FIFOQueue()
+    sink = SinkQueue()
+    s1 = ModifyServer(1.0)
+    s2 = ModifyServer(1.0)
     connect!(model, source, s1, :only)
     connect!(model, s1, fifo, :only)
     connect!(model, fifo, s2, :only)

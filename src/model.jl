@@ -1,3 +1,5 @@
+using Logging
+
 using Graphs
 
 export QueueModel
@@ -35,15 +37,15 @@ function add_server_edge!(g::MutableBiGraph, s, q)
         push!(g.server[s], q)
     end
 end
-function add_queue_edge!(g::MutableBiGraph, s, q)
-    if s ∉ keys(g.queue)
-        g.server[s] = Int[q]
+function add_queue_edge!(g::MutableBiGraph, q, s)
+    if q ∉ keys(g.queue)
+        g.queue[s] = Int[s]
     else
-        push!(g.queue[s], q)
+        push!(g.queue[q], s)
     end
 end
-outqueues(g::MutableBiGraph, s) = g.server[s]
-outservers(g::MutableBiGraph, q) = g.queue[q]
+outqueues(g::MutableBiGraph, s) = (s ∈ keys(g.server)) ?  g.server[s] : Vector{Int}()
+outservers(g::MutableBiGraph, q) = (q ∈ keys(g.queue)) ?  g.queue[q] : Vector{Int}()
 
 function server_length(g::MutableBiGraph)
     servers = Set(keys(g.server))
@@ -87,6 +89,7 @@ mutable struct QueueModel
     server_available::Vector{Bool}
     server_tokens::Vector{Token}
     queue::Vector{Queue}
+    build_network::MutableBiGraph
     built::Bool
 end
 
@@ -100,6 +103,7 @@ function QueueModel()
         Vector{Bool}(),
         Vector{Token}(),
         Vector{Queue}(),
+        MutableBiGraph(),
         false
         )
 end
@@ -118,35 +122,65 @@ end
 
 function ensure_built!(m::QueueModel)
     if !m.built
+        @debug "Bulding queueing model"
         resize!(m.server_tokens, length(m.server))
         resize!(m.server_available, length(m.server))
         m.server_available .= true
         m.network = BiGraph(length(m.server), length(m.queue))
+        for s_source in eachindex(m.server)
+            for q_target in outqueues(m.build_network, s_source)
+                add_server_edge!(m.network, s_source, q_target)
+            end
+        end
+        for q_source in eachindex(m.queue)
+            for s_target in outservers(m.build_network, q_source)
+                add_queue_edge!(m.network, q_source, s_target)
+            end
+        end
+        # Erase it because we don't need that memory hanging around.
+        m.build_network = MutableBiGraph()
         m.built = true
     end
+    nothing
 end
 
+
 function connect!(m::QueueModel, q::Queue, s::Server, role::Symbol)
-    ensure_built!(m)
-    qid = findfirst(isequal(q), m.queue)
-    sid = findfirst(isequal(s), m.server)
-    add_queue_edge!(m.network, qid, sid)
-    m.server_role[(qid, sid)] = role
+    if q.id == 0
+        add_queue!(m, q)
+        @assert q.id > 0
+    end
+    if s.id == 0
+        add_server!(m, s)
+        @assert s.id > 0
+    end
+    add_queue_edge!(m.build_network, q.id, s.id)
+    m.server_role[(q.id, s.id)] = role
 end
 
 function connect!(m::QueueModel, s::Server, q::Queue, role::Symbol)
-    ensure_built!(m)
-    sid = findfirst(isequal(s), m.server)
-    qid = findfirst(isequal(q), m.queue)
-    add_server_edge!(m.network, sid, qid)
-    m.queue_role[(sid, qid)] = role
+    if q.id == 0
+        add_queue!(m, q)
+        @assert q.id > 0
+    end
+    if s.id == 0
+        add_server!(m, s)
+        @assert s.id > 0
+    end
+    add_server_edge!(m.build_network, s.id, q.id)
+    m.queue_role[(s.id, q.id)] = role
 end
 
 
 function check_model(m::QueueModel)
+    ensure_built!(m)
     equivalent_graph = single_graph(m.network)
     @assert is_weakly_connected(equivalent_graph)
     for server_id in eachindex(m.server)
-        @assert length(inqueues(m.network, server_id)) == 1
+        if length(inqueues(m.network, server_id)) != 1
+            cnt = length(inqueues(m.network, server_id))
+            println("Server $server_id has $cnt input queues")
+            @assert length(inqueues(m.network, server_id)) == 1
+        end
     end
 end
