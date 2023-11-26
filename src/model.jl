@@ -77,7 +77,9 @@ function single_graph(bigraph::BiGraph)
     for edge in edges(bigraph.queue)
         add_edge!(s, bigraph.server_cnt + src(edge), dst(edge))
     end
-    return s
+    labels = vcat(collect(1:bigraph.server_cnt), collect(1:bigraph.queue_cnt))
+    membership = vcat(repeat([1], bigraph.server_cnt), repeat([2], bigraph.queue_cnt))
+    return s, labels, membership
 end
 
 
@@ -174,7 +176,7 @@ end
 
 function check_model(m::QueueModel)
     ensure_built!(m)
-    equivalent_graph = single_graph(m.network)
+    equivalent_graph, _, _ = single_graph(m.network)
     @assert is_weakly_connected(equivalent_graph)
     for server_id in eachindex(m.server)
         if length(inqueues(m.network, server_id)) != 1
