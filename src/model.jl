@@ -21,6 +21,47 @@ outqueues(g::BiGraph, s) = outneighbors(g.server, s)
 inservers(g::BiGraph, q) = inneighbors(g.server, q)
 outservers(g::BiGraph, q) = outneighbors(g.queue, q)
 
+
+struct MutableBiGraph
+    server::Dict{Int,Vector{Int}}
+    queue::Dict{Int,Vector{Int}}
+    MutableBiGraph() = new(Dict{Int,Vector{Int}}(), Dict{Int,Vector{Int}}())
+end
+
+function add_server_edge!(g::MutableBiGraph, s, q)
+    if s ∉ keys(g.server)
+        g.server[s] = Int[q]
+    else
+        push!(g.server[s], q)
+    end
+end
+function add_queue_edge!(g::MutableBiGraph, s, q)
+    if s ∉ keys(g.queue)
+        g.server[s] = Int[q]
+    else
+        push!(g.queue[s], q)
+    end
+end
+outqueues(g::MutableBiGraph, s) = g.server[s]
+outservers(g::MutableBiGraph, q) = g.queue[q]
+
+function server_length(g::MutableBiGraph)
+    servers = Set(keys(g.server))
+    for targets in values(g.queue)
+        union!(servers, targets)
+    end
+    return length(servers)
+end
+
+function queue_length(g::MutableBiGraph)
+    queues = Set(keys(g.queue))
+    for targets in values(g.server)
+        union!(queues, targets)
+    end
+    return length(queues)
+end
+
+
 """
 In order to check graph properties, convert the bigraph into a single
 directed graph where the first N nodes are servers and the next N

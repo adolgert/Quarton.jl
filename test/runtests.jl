@@ -5,6 +5,10 @@ using Quarton
     include("test_server.jl")
 end
 
+@testset "server" begin
+    include("test_model.jl")
+end
+
 @testset "machine" begin
     include("test_machine.jl")
 end
