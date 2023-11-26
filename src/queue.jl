@@ -1,16 +1,18 @@
 
 using DataStructures
 
-export Queue, InfiniteSourceQueue, FIFOQueue, SinkQueue, RandomQueue, total_work
+export Queue, InfiniteSourceQueue, FIFOQueue, SummarySink, RandomQueue, total_work
 export FiniteFIFOQueue, throughput
 
 abstract type Queue end
+abstract type SourceQueue <: Queue end
+abstract type SinkQueue <: Queue end
 
 id!(q::Queue, id::Int) = (q.id = id; q)
 id(q::Queue) = q.id
 
 
-mutable struct FIFOQueue{T<:Token} <: Queue
+mutable struct FIFOQueue{T} <: Queue
     deque::Deque{Tuple{T,Time}}
     retire_cnt::Int
     retire_total_duration::Time
@@ -30,7 +32,9 @@ function update_downstream!(q::FIFOQueue, downstream, when, rng)
         if !isempty(q.deque)
             token, emplace_time = popfirst!(q.deque)
             q.retire_cnt += 1
+            delay = when - emplace_time
             q.retire_total_duration += when - emplace_time
+            add_delay!(token, delay)
             push!(downstream, s, token)
         end
     end
@@ -41,7 +45,7 @@ total_work(q::FIFOQueue) = sum(workload(w) for (w, t) in q.deque; init=0.0)
 
 throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
-mutable struct InfiniteSourceQueue{T<:Token} <: Queue
+mutable struct InfiniteSourceQueue{T} <: SourceQueue
     create_cnt::Int
     id::Int
     builder::Function
@@ -61,28 +65,34 @@ end
 Base.length(q::InfiniteSourceQueue) = 0
 
 
-mutable struct SinkQueue{T<:Token} <: Queue
+mutable struct SummarySink{T} <: SinkQueue
     retire_cnt::Int
     retire_total_duration::Time
+    retire_total_delay::Time
     id::Int
-    SinkQueue{T}() where {T<:Token} = new(zero(Int), zero(Time), zero(Int))
+    SummarySink{T}() where {T<:Token} =
+        new(zero(Int), zero(Time), zero(Time), zero(Int))
 end
 
 
-function Base.push!(q::SinkQueue, token, when)
+function Base.push!(q::SummarySink, token, when)
     q.retire_cnt += 1
     q.retire_total_duration += when - created(token)
+    q.retire_total_delay += delay(token)
 end
 
-Base.length(q::SinkQueue) = q.retire_cnt
+Base.length(q::SummarySink) = q.retire_cnt
 
-throughput(q::SinkQueue) = q.retire_cnt / q.retire_total_duration
+throughput(q::SummarySink) = q.retire_cnt / q.retire_total_duration
+retired(q::SummarySink) = q.retire_cnt
+duration(q::SummarySink) = q.retire_total_duration
+delay(q::SummarySink) = q.retire_total_delay
 
-update_downstream!(q::SinkQueue, downstream, when, rng) = nothing
-total_work(q::SinkQueue) = 0.0  # This will be a type problem. Need the token type.
+update_downstream!(q::SummarySink, downstream, when, rng) = nothing
+total_work(q::SummarySink) = 0.0  # This will be a type problem. Need the token type.
 
 
-mutable struct RandomQueue{T<:Token} <: Queue
+mutable struct RandomQueue{T} <: Queue
     queue::Vector{Tuple{T,Time}}
     retire_cnt::Int
     retire_total_duration::Time
@@ -103,7 +113,9 @@ function update_downstream!(q::RandomQueue, downstream, when, rng)
             token, emplace_time = q.queue[take_idx]
             deleteat!(q.queue, take_idx)
             q.retire_cnt += 1
-            q.retire_total_duration += when - emplace_time
+            delay = when - emplace_time
+            q.retire_total_duration += delay
+            add_delay!(token, delay)
             push!(downstream, s, token)
         end
     end
@@ -115,7 +127,7 @@ total_work(q::RandomQueue) = sum(workload(w) for (w, t) in q.queue)
 throughput(q::RandomQueue) = q.retire_cnt / q.retire_total_duration
 
 
-mutable struct FiniteFIFOQueue{T<:Token} <: Queue
+mutable struct FiniteFIFOQueue{T} <: Queue
     deque::Deque{Tuple{T,Time}}
     limit::Int
     retire_cnt::Int
@@ -143,7 +155,9 @@ function update_downstream!(q::FiniteFIFOQueue, downstream, when, rng)
         if !isempty(q.deque)
             token, emplace_time = popfirst!(q.deque)
             q.retire_cnt += 1
-            q.retire_total_duration += when - emplace_time
+            delay = when - emplace_time
+            q.retire_total_duration += delay
+            add_delay!(token, delay)
             push!(downstream, s, token)
         end
     end

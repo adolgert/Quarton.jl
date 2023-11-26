@@ -27,7 +27,7 @@ import Cairo, Fontconfig
         )
     @pipe! model disk1_queue => disk1 :only
 
-    sink = SinkQueue{T}()
+    sink = SummarySink{T}()
     @pipe! model disk1 => sink :out
     
     disk2_queue = FIFOQueue{T}()

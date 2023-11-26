@@ -10,7 +10,7 @@ import Cairo, Fontconfig
     s1 = ModifyServer(1.0)
     source = InfiniteSourceQueue{T}()
     @pipe! model source => s1 :only
-    sink = SinkQueue{T}()
+    sink = SummarySink{T}()
     @pipe! model s1 => sink :only
     check_model(model)
     trajectory = Trajectory(2342334)
@@ -34,7 +34,7 @@ end
     model = QueueModel{T}()
     source = InfiniteSourceQueue{T}()
     fifo = FIFOQueue{T}()
-    sink = SinkQueue{T}()
+    sink = SummarySink{T}()
     s1 = ModifyServer(1.0)
     s2 = ModifyServer(1.0)
     @pipe! model source => s1 :only
@@ -78,7 +78,7 @@ end
         model = QueueModel{T}()
         source = InfiniteSourceQueue{T}(work_dist)
         fifo = FIFOQueue{T}()
-        sink = SinkQueue{T}()
+        sink = SummarySink{T}()
         assign_strategy = LeastWorkLeft()
         s1 = ArrivalServer(arrival_rate, disbursement=assign_strategy)
         servers = Vector{ModifyServer}(undef, N)

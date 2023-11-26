@@ -221,3 +221,50 @@ macro pipe!(model, connect, tag)
     nb = string(connect.args[3])
     :(connect!($(esc(model)), $(esc(a)), $(esc(na)), $(esc(b)), $(esc(nb)), $(esc(tag))))
 end
+
+
+function average_response_time(m::QueueModel)
+    retire_cnt = 0
+    retire_total_duration = 0.0
+
+    for queue in m.queue
+        if queue isa SinkQueue
+            retire_cnt += retired(queue)
+            retire_total_duration += duration(queue)
+        end
+    end
+    (retire_cnt > 0) ? retire_total_duration / retire_cnt : 0.0
+end
+
+function average_delay(m::QueueModel)
+    retire_cnt = 0
+    retire_total_delay = 0.0
+
+    for queue in m.queue
+        if queue isa SinkQueue
+            retire_cnt += retired(queue)
+            retire_total_delay += duration(queue)
+        end
+    end
+    (retire_cnt > 0) ? retire_total_delay / retire_cnt : 0.0
+end
+
+average_service(m::QueueModel) = average_response_time(m) - average_delay(m)
+
+function jobs_in_queue(m::QueueModel)
+    # Rather than doing the summation, we could keep this cached in
+    # the trajectory.
+    cnt = 0
+    for queue in m.queue
+        if !queue isa SinkQueue
+            cnt += length(cnt)
+        end
+    end
+    return cnt
+end
+
+
+function jobs_in_system(m::QueueModel)
+    active = sum(!m.server_available)
+    return jobs_in_queue(m) + active
+end
