@@ -39,7 +39,7 @@ function add_server_edge!(g::MutableBiGraph, s, q)
 end
 function add_queue_edge!(g::MutableBiGraph, q, s)
     if q ∉ keys(g.queue)
-        g.queue[s] = Int[s]
+        g.queue[q] = Int[s]
     else
         push!(g.queue[q], s)
     end
