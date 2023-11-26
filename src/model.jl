@@ -3,7 +3,7 @@ using Logging
 using Graphs
 
 export QueueModel
-export add_queue!, add_server!, connect!, step!, check_model
+export add_queue!, add_server!, connect!, step!, check_model, @pipe!, network
 
 struct BiGraph
     server::SimpleDiGraph{Int}
@@ -39,7 +39,7 @@ function add_server_edge!(g::MutableBiGraph, s, q)
 end
 function add_queue_edge!(g::MutableBiGraph, q, s)
     if q ∉ keys(g.queue)
-        g.queue[s] = Int[s]
+        g.queue[q] = Int[s]
     else
         push!(g.queue[q], s)
     end
@@ -83,42 +83,48 @@ function single_graph(bigraph::BiGraph)
 end
 
 
-mutable struct QueueModel
+mutable struct QueueModel{T<:Token}
     network::BiGraph
     server_role::Dict{Tuple{Int,Int},Symbol} # what a server means to a queue
     queue_role::Dict{Tuple{Int,Int},Symbol}
     server::Vector{Server}
     server_available::Vector{Bool}
-    server_tokens::Vector{Token}
+    server_tokens::Vector{T}
     queue::Vector{Queue}
+    s_name::Dict{String,Int}
+    q_name::Dict{String,Int}
     build_network::MutableBiGraph
     built::Bool
 end
 
 
-function QueueModel()
+function QueueModel{T}() where {T<:Token}
     QueueModel(
         BiGraph(0, 0),
         Dict{Tuple{Int,Int},Symbol}(),
         Dict{Tuple{Int,Int},Symbol}(),
         Vector{Server}(),
         Vector{Bool}(),
-        Vector{Token}(),
+        Vector{T}(),
         Vector{Queue}(),
+        Dict{String,Int}(),
+        Dict{String,Int}(),
         MutableBiGraph(),
         false
         )
 end
 
-function add_server!(m::QueueModel, server)
+function add_server!(m::QueueModel, server, name)
     push!(m.server, server)
     id!(server, length(m.server))
+    m.s_name[name] = id(server)
     return server
 end
 
-function add_queue!(m::QueueModel, queue)
+function add_queue!(m::QueueModel, queue, name)
     push!(m.queue, queue)
     id!(queue, length(m.queue))
+    m.q_name[name] = id(queue)
     queue
 end
 
@@ -147,26 +153,26 @@ function ensure_built!(m::QueueModel)
 end
 
 
-function connect!(m::QueueModel, q::Queue, s::Server, role::Symbol)
+function connect!(m::QueueModel, q::Queue, q_name, s::Server, s_name, role::Symbol)
     if q.id == 0
-        add_queue!(m, q)
+        add_queue!(m, q, q_name)
         @assert q.id > 0
     end
     if s.id == 0
-        add_server!(m, s)
+        add_server!(m, s, s_name)
         @assert s.id > 0
     end
     add_queue_edge!(m.build_network, q.id, s.id)
     m.server_role[(q.id, s.id)] = role
 end
 
-function connect!(m::QueueModel, s::Server, q::Queue, role::Symbol)
+function connect!(m::QueueModel, s::Server, s_name, q::Queue, q_name, role::Symbol)
     if q.id == 0
-        add_queue!(m, q)
+        add_queue!(m, q, q_name)
         @assert q.id > 0
     end
     if s.id == 0
-        add_server!(m, s)
+        add_server!(m, s, s_name)
         @assert s.id > 0
     end
     add_server_edge!(m.build_network, s.id, q.id)
@@ -184,5 +190,81 @@ function check_model(m::QueueModel)
             println("Server $server_id has $cnt input queues")
             @assert length(inqueues(m.network, server_id)) == 1
         end
+        if length(outqueues(m.network, server_id)) == 0
+            println("Server $server_id doesn't have an output queue")
+        end
     end
+    for queue_id in eachindex(m.queue)
+        in_out = length(inservers(m.network, queue_id)) + length(outservers(m.network, queue_id))
+        if in_out == 0
+            println("Queue $queue_id isn't connected")
+        end
+    end
+end
+
+
+network(m::QueueModel) = single_graph(m.network)
+
+
+"""
+    @pipe! model source=>target :role
+
+This macro adds a queue and server connection to the model. It's a macro
+so that it can record the variable name you used to refer to the source
+and target, in order to access data later using that variable name. The
+role is a symbol that identifies this source=>target edge.
+"""
+macro pipe!(model, connect, tag)
+    a = connect.args[2]
+    na = string(connect.args[2])
+    b = connect.args[3]
+    nb = string(connect.args[3])
+    :(connect!($(esc(model)), $(esc(a)), $(esc(na)), $(esc(b)), $(esc(nb)), $(esc(tag))))
+end
+
+
+function average_response_time(m::QueueModel)
+    retire_cnt = 0
+    retire_total_duration = 0.0
+
+    for queue in m.queue
+        if queue isa SinkQueue
+            retire_cnt += retired(queue)
+            retire_total_duration += duration(queue)
+        end
+    end
+    (retire_cnt > 0) ? retire_total_duration / retire_cnt : 0.0
+end
+
+function average_delay(m::QueueModel)
+    retire_cnt = 0
+    retire_total_delay = 0.0
+
+    for queue in m.queue
+        if queue isa SinkQueue
+            retire_cnt += retired(queue)
+            retire_total_delay += duration(queue)
+        end
+    end
+    (retire_cnt > 0) ? retire_total_delay / retire_cnt : 0.0
+end
+
+average_service(m::QueueModel) = average_response_time(m) - average_delay(m)
+
+function jobs_in_queue(m::QueueModel)
+    # Rather than doing the summation, we could keep this cached in
+    # the trajectory.
+    cnt = 0
+    for queue in m.queue
+        if !queue isa SinkQueue
+            cnt += length(cnt)
+        end
+    end
+    return cnt
+end
+
+
+function jobs_in_system(m::QueueModel)
+    active = sum(!m.server_available)
+    return jobs_in_queue(m) + active
 end
