@@ -3,7 +3,7 @@ using Logging
 using Graphs
 
 export QueueModel
-export add_queue!, add_server!, connect!, step!, check_model, @pipe!
+export add_queue!, add_server!, connect!, step!, check_model, @pipe!, network
 
 struct BiGraph
     server::SimpleDiGraph{Int}
@@ -190,8 +190,20 @@ function check_model(m::QueueModel)
             println("Server $server_id has $cnt input queues")
             @assert length(inqueues(m.network, server_id)) == 1
         end
+        if length(outqueues(m.network, server_id)) == 0
+            println("Server $server_id doesn't have an output queue")
+        end
+    end
+    for queue_id in eachindex(m.queue)
+        in_out = length(inservers(m.network, queue_id)) + length(outservers(m.network, queue_id))
+        if in_out == 0
+            println("Queue $queue_id isn't connected")
+        end
     end
 end
+
+
+network(m::QueueModel) = single_graph(m.network)
 
 
 """

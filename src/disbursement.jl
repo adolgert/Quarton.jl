@@ -70,6 +70,7 @@ struct LeastWorkLeft <: Assignment; end
 
 function update_downstream!(r::LeastWorkLeft, downstream, when, rng)
     q_dest = queues(downstream)
+    @assert length(q_dest) > 0
     work = [total_work(q) for q in q_dest]
     smallest_work = minimum(work)
     smallest_queue = [q_dest[idx] for (idx, w) in enumerate(work) if w <= smallest_work]

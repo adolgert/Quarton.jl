@@ -2,7 +2,7 @@
 using DataStructures
 
 export Queue, InfiniteSourceQueue, FIFOQueue, SinkQueue, RandomQueue, total_work
-export FiniteFIFOQueue
+export FiniteFIFOQueue, throughput
 
 abstract type Queue end
 
@@ -20,6 +20,8 @@ mutable struct FIFOQueue{T<:Token} <: Queue
 end
 
 Base.push!(q::FIFOQueue, token, when) = push!(q.deque, (token, when))
+Base.length(q::FIFOQueue) = length(q.deque)
+Base.iterate(q::FIFOQueue, s...) = iterate(q.deque, s...)
 
 function update_downstream!(q::FIFOQueue, downstream, when, rng)
     s_available = available_servers(downstream)
@@ -35,7 +37,7 @@ function update_downstream!(q::FIFOQueue, downstream, when, rng)
     nothing
 end
 
-total_work(q::FIFOQueue) = sum(workload(w) for w in q.deque)
+total_work(q::FIFOQueue) = sum(workload(w) for (w, t) in q.deque; init=0.0)
 
 throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
@@ -56,6 +58,7 @@ function update_downstream!(q::InfiniteSourceQueue, downstream, when, rng)
     end
     nothing
 end
+Base.length(q::InfiniteSourceQueue) = 0
 
 
 mutable struct SinkQueue{T<:Token} <: Queue
@@ -71,11 +74,12 @@ function Base.push!(q::SinkQueue, token, when)
     q.retire_total_duration += when - created(token)
 end
 
+Base.length(q::SinkQueue) = q.retire_cnt
 
 throughput(q::SinkQueue) = q.retire_cnt / q.retire_total_duration
 
 update_downstream!(q::SinkQueue, downstream, when, rng) = nothing
-total_work(q::SinkQueue) = 0  # This will be a type problem. Need the token type.
+total_work(q::SinkQueue) = 0.0  # This will be a type problem. Need the token type.
 
 
 mutable struct RandomQueue{T<:Token} <: Queue
@@ -88,6 +92,7 @@ mutable struct RandomQueue{T<:Token} <: Queue
 end
 
 Base.push!(q::RandomQueue, token, when) = push!(q.queue, (token, when))
+Base.length(q::RandomQueue) = length(q.queue)
 
 function update_downstream!(q::RandomQueue, downstream, when, rng)
     s_available = available_servers(downstream)
@@ -105,7 +110,7 @@ function update_downstream!(q::RandomQueue, downstream, when, rng)
     nothing
 end
 
-total_work(q::RandomQueue) = sum(workload(w) for w in q.queue)
+total_work(q::RandomQueue) = sum(workload(w) for (w, t) in q.queue)
 
 throughput(q::RandomQueue) = q.retire_cnt / q.retire_total_duration
 
@@ -129,6 +134,7 @@ function Base.push!(q::FiniteFIFOQueue, token, when)
         q.drop_cnt += 1
     end
 end
+Base.length(q::FiniteFIFOQueue) = length(q.deque)
 
 function update_downstream!(q::FiniteFIFOQueue, downstream, when, rng)
     s_available = available_servers(downstream)
@@ -144,6 +150,6 @@ function update_downstream!(q::FiniteFIFOQueue, downstream, when, rng)
     nothing
 end
 
-total_work(q::FiniteFIFOQueue) = sum(workload(w) for w in q.deque)
+total_work(q::FiniteFIFOQueue) = sum(workload(w) for (w, t) in q.deque)
 
 throughput(q::FiniteFIFOQueue) = q.retire_cnt / q.retire_total_duration
