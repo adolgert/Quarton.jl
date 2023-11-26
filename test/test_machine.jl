@@ -4,9 +4,9 @@ using Test
     model = QueueModel()
     s1 = ModifyServer(1.0)
     source = InfiniteSourceQueue()
-    connect!(model, source, s1, :only)
+    @pipe! model source => s1 :only
     sink = SinkQueue()
-    connect!(model, s1, sink, :only)
+    @pipe! model s1 => sink :only
     check_model(model)
     trajectory = Trajectory(2342334)
     start_time = zero(Float64)
@@ -31,10 +31,10 @@ end
     sink = SinkQueue()
     s1 = ModifyServer(1.0)
     s2 = ModifyServer(1.0)
-    connect!(model, source, s1, :only)
-    connect!(model, s1, fifo, :only)
-    connect!(model, fifo, s2, :only)
-    connect!(model, s2, sink, :only)
+    @pipe! model source => s1 :only
+    @pipe! model s1 => fifo :only
+    @pipe! model fifo => s2 :only
+    @pipe! model s2 => sink :only
     check_model(model)
     trajectory = Trajectory(2342334)
     start_time = zero(Float64)

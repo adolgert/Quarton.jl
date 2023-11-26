@@ -3,7 +3,7 @@ using Logging
 using Graphs
 
 export QueueModel
-export add_queue!, add_server!, connect!, step!, check_model
+export add_queue!, add_server!, connect!, step!, check_model, @pipe!
 
 struct BiGraph
     server::SimpleDiGraph{Int}
@@ -91,6 +91,8 @@ mutable struct QueueModel
     server_available::Vector{Bool}
     server_tokens::Vector{Token}
     queue::Vector{Queue}
+    s_name::Dict{String,Int}
+    q_name::Dict{String,Int}
     build_network::MutableBiGraph
     built::Bool
 end
@@ -105,20 +107,24 @@ function QueueModel()
         Vector{Bool}(),
         Vector{Token}(),
         Vector{Queue}(),
+        Dict{String,Int}(),
+        Dict{String,Int}(),
         MutableBiGraph(),
         false
         )
 end
 
-function add_server!(m::QueueModel, server)
+function add_server!(m::QueueModel, server, name)
     push!(m.server, server)
     id!(server, length(m.server))
+    m.s_name[name] = id(server)
     return server
 end
 
-function add_queue!(m::QueueModel, queue)
+function add_queue!(m::QueueModel, queue, name)
     push!(m.queue, queue)
     id!(queue, length(m.queue))
+    m.q_name[name] = id(queue)
     queue
 end
 
@@ -147,26 +153,26 @@ function ensure_built!(m::QueueModel)
 end
 
 
-function connect!(m::QueueModel, q::Queue, s::Server, role::Symbol)
+function connect!(m::QueueModel, q::Queue, q_name, s::Server, s_name, role::Symbol)
     if q.id == 0
-        add_queue!(m, q)
+        add_queue!(m, q, q_name)
         @assert q.id > 0
     end
     if s.id == 0
-        add_server!(m, s)
+        add_server!(m, s, s_name)
         @assert s.id > 0
     end
     add_queue_edge!(m.build_network, q.id, s.id)
     m.server_role[(q.id, s.id)] = role
 end
 
-function connect!(m::QueueModel, s::Server, q::Queue, role::Symbol)
+function connect!(m::QueueModel, s::Server, s_name, q::Queue, q_name, role::Symbol)
     if q.id == 0
-        add_queue!(m, q)
+        add_queue!(m, q, q_name)
         @assert q.id > 0
     end
     if s.id == 0
-        add_server!(m, s)
+        add_server!(m, s, s_name)
         @assert s.id > 0
     end
     add_server_edge!(m.build_network, s.id, q.id)
@@ -185,4 +191,21 @@ function check_model(m::QueueModel)
             @assert length(inqueues(m.network, server_id)) == 1
         end
     end
+end
+
+
+"""
+    @pipe! model source=>target :role
+
+This macro adds a queue and server connection to the model. It's a macro
+so that it can record the variable name you used to refer to the source
+and target, in order to access data later using that variable name. The
+role is a symbol that identifies this source=>target edge.
+"""
+macro pipe!(model, connect, tag)
+    a = connect.args[2]
+    na = string(connect.args[2])
+    b = connect.args[3]
+    nb = string(connect.args[3])
+    :(connect!($(esc(model)), $(esc(a)), $(esc(na)), $(esc(b)), $(esc(nb)), $(esc(tag))))
 end
