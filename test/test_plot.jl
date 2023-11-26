@@ -6,17 +6,18 @@ import Cairo, Fontconfig
 @testset "Plotting Start" begin
     arrival_rate = 1.0
     service_rate = 1.0
-    model = QueueModel()
-    token_builder = (when, rng) -> CountedWork(1.0, when)
-    source = InfiniteSourceQueue(token_builder)
+    T = CountedWork
+    model = QueueModel{T}()
+    token_builder = (when, rng) -> T(1.0, when)
+    source = InfiniteSourceQueue{T}(token_builder)
     arrival = ArrivalServer(arrival_rate)
     @pipe! model source => arrival :only
-    CPU_queue = FIFOQueue()
+    CPU_queue = FIFOQueue{T}()
     @pipe! model arrival => CPU_queue :only
     CPU = ModifyServer(service_rate)
     @pipe! model CPU_queue => CPU :only
 
-    disk1_queue = FIFOQueue()
+    disk1_queue = FIFOQueue{T}()
     @pipe! model CPU => disk1_queue :only
 
     on_output = token -> (token.mark = 2; nothing)
@@ -26,10 +27,10 @@ import Cairo, Fontconfig
         )
     @pipe! model disk1_queue => disk1 :only
 
-    sink = SinkQueue()
+    sink = SinkQueue{T}()
     @pipe! model disk1 => sink :out
     
-    disk2_queue = FIFOQueue()
+    disk2_queue = FIFOQueue{T}()
     @pipe! model disk1 => disk2_queue :around
 
     disk2 = ModifyServer(service_rate)

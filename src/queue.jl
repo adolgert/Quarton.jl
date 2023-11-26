@@ -10,12 +10,13 @@ id!(q::Queue, id::Int) = (q.id = id; q)
 id(q::Queue) = q.id
 
 
-mutable struct FIFOQueue <: Queue
-    deque::Deque{Tuple{Token,Time}}
+mutable struct FIFOQueue{T<:Token} <: Queue
+    deque::Deque{Tuple{T,Time}}
     retire_cnt::Int
     retire_total_duration::Time
     id::Int
-    FIFOQueue() = new(Deque{Tuple{Token,Time}}(), zero(Int), zero(Time), zero(Int))
+    FIFOQueue{T}() where {T<:Token} =
+        new(Deque{Tuple{T,Time}}(), zero(Int), zero(Time), zero(Int))
 end
 
 Base.push!(q::FIFOQueue, token, when) = push!(q.deque, (token, when))
@@ -38,11 +39,11 @@ total_work(q::FIFOQueue) = sum(workload(w) for w in q.deque)
 
 throughput(q::FIFOQueue) = q.retire_cnt / q.retire_total_duration
 
-mutable struct InfiniteSourceQueue <: Queue
+mutable struct InfiniteSourceQueue{T<:Token} <: Queue
     create_cnt::Int
     id::Int
     builder::Function
-    InfiniteSourceQueue(builder=(when, rng)->Work(1.0, when)) =
+    InfiniteSourceQueue{T}(builder=(when, rng)->T(1.0, when)) where {T<:Token} =
             new(zero(Int), zero(Int), builder)
 end
 
@@ -57,11 +58,11 @@ function update_downstream!(q::InfiniteSourceQueue, downstream, when, rng)
 end
 
 
-mutable struct SinkQueue <: Queue
+mutable struct SinkQueue{T<:Token} <: Queue
     retire_cnt::Int
     retire_total_duration::Time
     id::Int
-    SinkQueue() = new(zero(Int), zero(Time), zero(Int))
+    SinkQueue{T}() where {T<:Token} = new(zero(Int), zero(Time), zero(Int))
 end
 
 
@@ -77,12 +78,13 @@ update_downstream!(q::SinkQueue, downstream, when, rng) = nothing
 total_work(q::SinkQueue) = 0  # This will be a type problem. Need the token type.
 
 
-mutable struct RandomQueue <: Queue
-    queue::Vector{Tuple{Token,Time}}
+mutable struct RandomQueue{T<:Token} <: Queue
+    queue::Vector{Tuple{T,Time}}
     retire_cnt::Int
     retire_total_duration::Time
     id::Int
-    RandomQueue() = new(Vector{Tuple{Token,Time}}(), zero(Int), zero(Time), zero(Int))
+    RandomQueue{T}() where {T<:Token} =
+        new(Vector{Tuple{T,Time}}(), zero(Int), zero(Time), zero(Int))
 end
 
 Base.push!(q::RandomQueue, token, when) = push!(q.queue, (token, when))
@@ -108,15 +110,15 @@ total_work(q::RandomQueue) = sum(workload(w) for w in q.queue)
 throughput(q::RandomQueue) = q.retire_cnt / q.retire_total_duration
 
 
-mutable struct FiniteFIFOQueue <: Queue
-    deque::Deque{Tuple{Token,Time}}
+mutable struct FiniteFIFOQueue{T<:Token} <: Queue
+    deque::Deque{Tuple{T,Time}}
     limit::Int
     retire_cnt::Int
     retire_total_duration::Time
     drop_cnt::Int
     id::Int
-    FiniteFIFOQueue(limit::Int) = new(
-        Deque{Tuple{Token,Time}}(), limit, zero(Int), zero(Time), zero(Int), zero(Int)
+    FiniteFIFOQueue{T}(limit::Int) where {T<:Token} = new(
+        Deque{Tuple{T,Time}}(), limit, zero(Int), zero(Time), zero(Int), zero(Int)
         )
 end
 

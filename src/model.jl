@@ -83,13 +83,13 @@ function single_graph(bigraph::BiGraph)
 end
 
 
-mutable struct QueueModel
+mutable struct QueueModel{T<:Token}
     network::BiGraph
     server_role::Dict{Tuple{Int,Int},Symbol} # what a server means to a queue
     queue_role::Dict{Tuple{Int,Int},Symbol}
     server::Vector{Server}
     server_available::Vector{Bool}
-    server_tokens::Vector{Token}
+    server_tokens::Vector{T}
     queue::Vector{Queue}
     s_name::Dict{String,Int}
     q_name::Dict{String,Int}
@@ -98,14 +98,14 @@ mutable struct QueueModel
 end
 
 
-function QueueModel()
+function QueueModel{T}() where {T<:Token}
     QueueModel(
         BiGraph(0, 0),
         Dict{Tuple{Int,Int},Symbol}(),
         Dict{Tuple{Int,Int},Symbol}(),
         Vector{Server}(),
         Vector{Bool}(),
-        Vector{Token}(),
+        Vector{T}(),
         Vector{Queue}(),
         Dict{String,Int}(),
         Dict{String,Int}(),
