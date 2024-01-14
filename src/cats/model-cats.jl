@@ -50,6 +50,7 @@ end
 
 # look at the schema
 # to_graphviz(QueueModelSch)
+to_graphviz(QueueModelSch, graph_attrs=Dict(:dpi=>"90",:size=>"12",:ratio=>"expand"))
 
 TokenType = Work
 
