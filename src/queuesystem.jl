@@ -1,25 +1,5 @@
-using GATlab, Catlab.Theories
-using Catlab.CategoricalAlgebra
-using Catlab.Graphs
-using Catlab.Graphics
+using Catlab
 
-# function construct()
-#     g = QueueGraph()
-#     server_cnt = 3
-#     queue_cnt = 3
-#     for sidx in 1:server_cnt
-#         add_part!(g, :S)
-#     end
-#     for qidx in 1:queue_cnt
-#         add_part!(g, :Q)
-#     end
-#     return g
-# end
-# g = QueueGraph()
-
-# construct()
-
-# let the stuff we make inherit from this
 
 # @present SchBipartiteGraph(FreeSchema) begin
 #   (V₁, V₂)::Ob
@@ -41,12 +21,13 @@ using Catlab.Graphics
 # let V₁ be servers, V₂ be queues
 # E₁₂ is edges from servers to queues
 # E₂₁ is edges from queues to servers
-# src₁,tgt₁ are for edges from servers to queues, v.v. for subscript 2
-@present QueueModelSch <: SchBipartiteGraph begin
+# src₁,tgt₂ are the source (server) and target (queue) of an edge from servers to queues
+# src₂,tgt₁ are the source (queue) and target (server) of an edge from queue from servers
+@present QueueSystemSch <: SchBipartiteGraph begin
     # decoration on edges
     RoleType::AttrType
-    queue_role::Attr(E₁₂,RoleType) # what a server means to a queue
-    server_role::Attr(E₂₁,RoleType) # what a queue means to a server
+    queue_role::Attr(E₁₂,RoleType) # downstream role from server to a queue
+    server_role::Attr(E₂₁,RoleType) # downstream role from a queue to a server
 
     JobContainerType::AttrType
     server_jobs::Attr(V₁,JobContainerType)
@@ -59,81 +40,34 @@ using Catlab.Graphics
     # decoration on queues
     QueueType::AttrType
     queue::Attr(V₂,QueueType)
+
+    # names for servers and queues
+    NameType::AttrType
+    server_name::Attr(V₁,NameType)
+    queue_name::Attr(V₂,NameType)
 end
 
+# @present MarkedQueueModelSch <: QueueModelSch begin
+#     (Job,V₁V₂)::Ob
+#     V₁_inclusion::Hom(V₁,V₁V₂)
+#     V₂_inclusion::Hom(V₂,V₁V₂)
+#     job_loc::Hom(Job,V₁V₂)
+# end
 
-@present MarkedQueueModelSch <: QueueModelSch begin
-    (Job,V₁V₂)::Ob
-    V₁_inclusion::Hom(V₁,V₁V₂)
-    V₂_inclusion::Hom(V₂,V₁V₂)
-    job_loc::Hom(Job,V₁V₂)
-end
+@acset_type QueueSystemType(QueueSystemSch, index=[:src₁,:tgt₁,:src₂,:tgt₁]) <: AbstractBipartiteGraph
 
-
-@acset_type QueueModelType(QueueModelSch, index=[:src₁,:tgt₁,:src₂,:tgt₁]) <: AbstractBipartiteGraph
-
-# Schema - Knows how to make a model.
-# Julia datatype - build from the schema.
-# Acset is an element of the Julia datatype. aka, a particular model
-# State of the model.
-# Observer of the model.
-# Trajectory of the model.
-struct Job end
-
-struct Server end
-
-function assign(c::Server, roles::AbstractVector)
-    return roles[1]
-end
-
-struct Queue end
-
-function assign(c::Queue, roles::AbstractVector)
-    return roles[1]
-end
-
-
-queue_model = QueueModelType{Symbol,Vector{Job},Server,Queue}()
-
-s1 = add_part!(
-    queue_model, :V₁,
-    server_jobs = Vector{Job}(),
-    server = Server()
-)
-
-q1 = add_part!(
-    queue_model, :V₂,
-    queue_jobs = Vector{Job}(),
-    queue = Queue()
-)
-
-add_part!(
-    queue_model, :E₂₁,
-    src₂ = q1,
-    tgt₁ = s1,
-    server_role = :only
-)
-
-# Start at s1. Compute preimage of tgt1, then from there walk back to src2.
-queue_model[incident(queue_model, s1, :tgt₁), :src₂]
-
-function get_queues_attached_to_server(model, s)
+"""
+    Grab the set of queues (part IDs) attached to a server by looking up the preimage of tgt₁ (E₂₁→V₁) and then walking 
+along src₂ (E₂₁→V₂).
+"""
+function get_queues_attached_to_server(model::T, s) where {T<:AbstractBipartiteGraph}
     model[incident(model, s, :tgt₁), :src₂]
 end
 
-function get_servers_attached_to_queue(model, q)
+"""
+    Grab the set of servers (part IDs) attached to a queue by looking up the preimage of tgt₂ (E₁₂→V₂) and then walking 
+along src₁ (E₁₂→V₁).
+"""
+function get_servers_attached_to_queue(model::T, q) where {T<:AbstractBipartiteGraph}
     model[incident(model, q, :tgt₂), :src₁]
 end
-
-add_parts!(
-    queue_model, :V₂, 2,
-    queue_jobs = fill(Vector{Job}(),2),
-    queue = fill(Queue(),2)
-)
-
-add_parts!(
-    queue_model, :E₁₂, 2,
-    src₁ = [s1,s1],
-    tgt₂ = [2,3],
-    queue_role = [:something,:something]
-)

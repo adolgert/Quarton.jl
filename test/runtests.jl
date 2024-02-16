@@ -1,5 +1,8 @@
 using Test
-using Quarton
+
+@testset "queuesystem" begin
+    include("test_queuesystem.jl")
+end
 
 # @testset "server" begin
 #     include("test_server.jl")
