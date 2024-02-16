@@ -61,8 +61,7 @@ end
     Grab the set of queues (part IDs) attached to a server.
 """
 function get_queues_attached_to_server(model::T, s) where {T<:AbstractBipartiteGraph}
-    # model[incident(model, s, :tgt₁), :src₂]
-    # maybe wrong?
+    model[incident(model, s, :src₁), :tgt₂]
 end
 
 """

@@ -32,4 +32,7 @@ using SafeTestsets
     @test length(server_job_holder) == 0
     Quarton.update_downstream!(queue_model, q1, when, rng)
     @test length(server_job_holder) == 1
+
+    @test get_servers_attached_to_queue(queue_model, q1) == [s1]
+    @test isempty(get_queues_attached_to_server(queue_model, s1))
 end
