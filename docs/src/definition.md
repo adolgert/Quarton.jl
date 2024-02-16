@@ -2,6 +2,10 @@
 
 This is an overview of the kinds of queueing models this Julia package can support.
 
+## Goals
+
+ * Compose a queueing model with other models. For instance, the token of a Petri net might become a job in the queueing model. Or a Markov model state could produce a job.
+
 ## Defining a Set of Random Variables
 
 A queueing model is a set of random variables:
