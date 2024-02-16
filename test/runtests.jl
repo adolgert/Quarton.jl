@@ -4,6 +4,10 @@ using Test
     include("test_queuesystem.jl")
 end
 
+@testset "queue" begin
+    include("test_queue.jl")
+end
+
 # @testset "server" begin
 #     include("test_server.jl")
 # end

@@ -12,36 +12,37 @@ using Random
 
 abstract type Server end
 
-export Server, ArrivalServer, ModifyServer
+export Server, ArrivalServer
+# export ModifyServer
 
-mutable struct ModifyServer <: Server
-    rate::Float64
-    modify_token::Function
-    disbursement::Assignment
-    id::Int
-end
-
-
-function ModifyServer(rate::Float64; disbursement=nothing, modify=nothing)
-    if disbursement === nothing
-        disbursement = RoundRobin()
-    end
-    if modify === nothing
-        modify = identity
-    end
-    ModifyServer(rate, modify, disbursement, zero(Int))
-end
-
-id!(s::ModifyServer, id::Int) = (s.id = id; s)
-id(s::ModifyServer) = s.id
-
-rate(s::ModifyServer, token) = Exponential(workload(token) / s.rate)
-modify!(s::ModifyServer, token, when) = (s.modify_token(token); nothing)
+# mutable struct ModifyServer <: Server
+#     rate::Float64
+#     modify_token::Function
+#     disbursement::Assignment
+#     id::Int
+# end
 
 
-function update_downstream!(s::ModifyServer, downstream, when, rng)
-    update_downstream!(s.disbursement, downstream, when, rng)
-end
+# function ModifyServer(rate::Float64; disbursement=nothing, modify=nothing)
+#     if disbursement === nothing
+#         disbursement = RoundRobin()
+#     end
+#     if modify === nothing
+#         modify = identity
+#     end
+#     ModifyServer(rate, modify, disbursement, zero(Int))
+# end
+
+# id!(s::ModifyServer, id::Int) = (s.id = id; s)
+# id(s::ModifyServer) = s.id
+
+# rate(s::ModifyServer, token) = Exponential(workload(token) / s.rate)
+# modify!(s::ModifyServer, token, when) = (s.modify_token(token); nothing)
+
+
+# function update_downstream!(s::ModifyServer, downstream, when, rng)
+#     update_downstream!(s.disbursement, downstream, when, rng)
+# end
 
 
 """
@@ -51,19 +52,16 @@ rate.
 """
 mutable struct ArrivalServer <: Server
     rate::Float64
-    disbursement::Assignment
-    id::Int
+    disbursement
+    # disbursement::Assignment
 end
 
 function ArrivalServer(rate::Float64; disbursement=nothing)
-    if disbursement === nothing
-        disbursement = RoundRobin()
-    end
-    ArrivalServer(rate, disbursement, zero(Int))
+    # if disbursement === nothing
+    #     disbursement = RoundRobin()
+    # end
+    ArrivalServer(rate, disbursement)
 end
-
-id!(s::ArrivalServer, id::Int) = (s.id = id; s)
-id(s::ArrivalServer) = s.id
 
 rate(s::ArrivalServer, token) = Exponential(workload(token) / s.rate)
 modify!(s::ArrivalServer, token, when) = create!(token, when)
@@ -72,3 +70,5 @@ modify!(s::ArrivalServer, token, when) = create!(token, when)
 function update_downstream!(s::ArrivalServer, downstream, when, rng)
     update_downstream!(s.disbursement, downstream, when, rng)
 end
+
+function notify_new_job(s::ArrivalServer, job) end

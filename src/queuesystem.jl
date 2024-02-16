@@ -1,5 +1,7 @@
 using Catlab
 
+export QueueSystemSch, QueueSystemType,
+    get_queues_attached_to_server, get_servers_attached_to_queue
 
 # @present SchBipartiteGraph(FreeSchema) begin
 #   (V₁, V₂)::Ob
@@ -31,7 +33,6 @@ using Catlab
 
     JobContainerType::AttrType
     server_jobs::Attr(V₁,JobContainerType)
-    queue_jobs::Attr(V₂,JobContainerType)
 
     # decoration on servers
     ServerType::AttrType
@@ -57,17 +58,16 @@ end
 @acset_type QueueSystemType(QueueSystemSch, index=[:src₁,:tgt₁,:src₂,:tgt₁]) <: AbstractBipartiteGraph
 
 """
-    Grab the set of queues (part IDs) attached to a server by looking up the preimage of tgt₁ (E₂₁→V₁) and then walking 
-along src₂ (E₂₁→V₂).
+    Grab the set of queues (part IDs) attached to a server.
 """
 function get_queues_attached_to_server(model::T, s) where {T<:AbstractBipartiteGraph}
-    model[incident(model, s, :tgt₁), :src₂]
+    # model[incident(model, s, :tgt₁), :src₂]
+    # maybe wrong?
 end
 
 """
-    Grab the set of servers (part IDs) attached to a queue by looking up the preimage of tgt₂ (E₁₂→V₂) and then walking 
-along src₁ (E₁₂→V₁).
+    Grab the set of servers (part IDs) attached to a queue.
 """
 function get_servers_attached_to_queue(model::T, q) where {T<:AbstractBipartiteGraph}
-    model[incident(model, q, :tgt₂), :src₁]
+    model[incident(model, q, :src₂), :tgt₁]
 end

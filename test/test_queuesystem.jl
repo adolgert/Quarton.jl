@@ -34,7 +34,6 @@ using SafeTestsets
 
     q1 = add_part!(
         queue_model, :V₂,
-        queue_jobs = Vector{PJob}(),
         queue = PQueue()
     )
     @test q1 == 1
@@ -51,7 +50,6 @@ using SafeTestsets
 
     @test 2:3 == add_parts!(
         queue_model, :V₂, 2,
-        queue_jobs = fill(Vector{PJob}(), 2),
         queue = fill(PQueue(), 2)
     )
 

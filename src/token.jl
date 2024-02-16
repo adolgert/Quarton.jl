@@ -1,4 +1,4 @@
-export Work, CountedWork
+export Work, CountedWork, Token
 
 abstract type Token end
 
