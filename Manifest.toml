@@ -234,7 +234,9 @@ version = "0.8.4"
 
 [[deps.Fleck]]
 deps = ["Combinatorics", "DataStructures", "Distributions", "Documenter", "Logging", "Random", "SafeTestsets"]
-path = "/home/adolgert/dev/Fleck"
+git-tree-sha1 = "6d65658ce012f7f5c79170465bc8fa622ec240ac"
+repo-rev = "main"
+repo-url = "https://github.com/adolgert/Fleck.jl"
 uuid = "5bb9b785-358c-4fee-af0f-b94a146244a8"
 version = "0.1.0"
 
